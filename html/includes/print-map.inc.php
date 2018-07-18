@@ -13,6 +13,8 @@
  */
 
 //Don't know where this should come from, but it is used later, so I just define it here.
+use LibreNMS\Authentication\Auth;
+
 $row_colour="#ffffff";
 
 $sql_array= array();
@@ -25,10 +27,10 @@ if (!empty($device['hostname'])) {
     $sql = ' ';
 }
 
-if (is_admin() === false && is_read() === false) {
+if (!Auth::user()->hasGlobalRead()) {
     $join_sql    .= ' LEFT JOIN `devices_perms` AS `DP` ON `D1`.`device_id` = `DP`.`device_id`';
     $sql  .= ' AND `DP`.`user_id`=?';
-    $sql_array[] = $_SESSION['user_id'];
+    $sql_array[] = Auth::id();
 }
 
 $devices_by_id = array();
@@ -158,18 +160,10 @@ foreach ($list as $items) {
     }
 
     $speed = $items['local_ifspeed']/1000/1000;
-    if ($speed == 100) {
-        $width = 3;
-    } elseif ($speed == 1000) {
-        $width = 5;
-    } elseif ($speed == 10000) {
-        $width = 10;
-    } elseif ($speed == 40000) {
-        $width = 15;
-    } elseif ($speed == 100000) {
+    if ($speed > 500000) {
         $width = 20;
     } else {
-        $width = 1;
+        $width = round(0.77 * pow($speed, 0.25));
     }
     $link_in_used = ($items['local_ifinoctets_rate'] * 8) / $items['local_ifspeed'] * 100;
     $link_out_used = ($items['local_ifoutoctets_rate'] * 8) / $items['local_ifspeed'] * 100;
@@ -208,7 +202,7 @@ $edges = json_encode($links);
 
 if (count($devices_by_id) > 1 && count($links) > 0) {
 ?>
- 
+
 <div id="visualization"></div>
 <script src="js/vis.min.js"></script>
 <script type="text/javascript">
@@ -220,14 +214,14 @@ $('#visualization').height(height + 'px');
 echo $nodes;
 ?>
     ;
- 
+
     // create an array with edges
     var edges =
 <?php
 echo $edges;
 ?>
     ;
- 
+
     // create a network
     var container = document.getElementById('visualization');
     var data = {
@@ -239,7 +233,7 @@ echo $edges;
     var network = new vis.Network(container, data, options);
     network.on('click', function (properties) {
         if (properties.nodes > 0) {
-            window.location.href = "device/device="+properties.nodes+"/tab=map/"
+            window.location.href = "device/device="+properties.nodes+"/tab=neighbours/selection=map/"
         }
     });
 </script>

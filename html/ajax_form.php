@@ -14,12 +14,14 @@
 
 // FUA
 
-$init_modules = array('web', 'auth', 'alerts');
+use LibreNMS\Authentication\Auth;
+
+$init_modules = array('web', 'auth', 'alerts', 'alerts-cli');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
-set_debug($_REQUEST['debug']);
+set_debug(isset($_REQUEST['debug']) ? $_REQUEST['debug'] : false);
 
-if (!$_SESSION['authenticated']) {
+if (!Auth::check()) {
     echo 'unauthenticated';
     exit;
 }

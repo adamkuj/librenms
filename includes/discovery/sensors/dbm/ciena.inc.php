@@ -19,7 +19,11 @@ $multiplier = 1;
 $divisor    = 10000;
 foreach ($pre_cache['ciena_oids'] as $index => $entry) {
     if (is_numeric($entry['wwpLeosPortXcvrRxDbmPower']) && $entry['wwpLeosPortXcvrRxDbmPower'] != 0 && $entry['wwpLeosPortXcvrTxDbmPower'] != 0) {
+<<<<<<< HEAD
 	$oid = '.1.3.6.1.4.1.6141.2.60.4.1.1.1.1.105.'.$index;
+=======
+        $oid = '.1.3.6.1.4.1.6141.2.60.4.1.1.1.1.105.'.$index;
+>>>>>>> b9393e6b52d64dd5feffadb246b925072848435a
         $descr = dbFetchCell('SELECT `ifDescr` FROM `ports` WHERE `ifName`= ? AND `device_id` = ?', array($index, $device['device_id'])) . ' Rx Power';
         $limit_low = $entry['wwpLeosPortXcvrLowRxDbmPwAlarmThreshold']/$divisor;
         $limit = $entry['wwpLeosPortXcvrHighRxDbmPwAlarmThreshold']/$divisor;

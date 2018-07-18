@@ -30,7 +30,7 @@ source: Support/FAQ.md
  - [What is the Demo User for?](#faq30)
  - [Why does modifying 'Default Alert Template' fail?](#faq31)
  - [Why would alert un-mute itself](#faq32)
- 
+ - [How do I change the Device Type?](#faq33)
 ### Developing
  - [How do I add support for a new OS?](#faq8)
  - [What information do you need to add a new OS?](#faq20)
@@ -59,13 +59,7 @@ You have two options for adding a new device into LibreNMS.
 
 #### <a name="faq3"> How do I get help?</a>
 
-We have a few methods for you to get in touch to ask for help.
-
-[Community Forum](https://community.librenms.org)
-
-[IRC](https://webchat.freenode.net/) Freenode ##librenms
-
-[Bug Reports](https://github.com/librenms/librenms/issues)
+[Getting Help](index.md)
 
 #### <a name="faq4"> What are the supported OSes for installing LibreNMS on?</a>
 
@@ -75,7 +69,7 @@ Supported is quite a strong word :) The 'officially' supported distros are:
  - Red Hat / CentOS
  - Gentoo
 
-However we will always aim to help wherever possible so if you are running a distro that isn't one of the above then give it a try anyway and if you need help then jump on the irc channel.
+However we will always aim to help wherever possible so if you are running a distro that isn't one of the above then give it a try anyway and if you need help then jump on the [discord server](https://t.libren.ms/discord).
 
 #### <a name="faq5"> Do you have a demo available?</a>
 
@@ -85,7 +79,7 @@ We do indeed, you can find access to the demo [here](https://demo.librenms.org)
 
 The first thing to do is to add /debug=yes/ to the end of the URI (I.e /devices/debug=yes/).
 
-If the page you are trying to load has a substantial amount of data in it then it could be that the php memory limit needs to be increased in php.ini and then your web service reloaded.
+If the page you are trying to load has a substantial amount of data in it then it could be that the php memory limit needs to be increased in [config.php](Configuration.md#core).
 
 #### <a name="faq10"> Why do I not see any graphs?</a>
 
@@ -104,11 +98,11 @@ You will then have a two options in the footer of the website - Show SQL Debug a
 
 #### <a name="faq11"> How do I debug the discovery process?</a>
 
-Please see the [Discovery Support](http://docs.librenms.org/Support/Discovery Support) document for further details.
+Please see the [Discovery Support](http://docs.librenms.org/Support/Discovery Support/) document for further details.
 
 #### <a name="faq12"> How do I debug the poller process?</a>
 
-Please see the [Poller Support](http://docs.librenms.org/Support/Poller Support) document for further details.
+Please see the [Poller Support](http://docs.librenms.org/Support/Poller Support/) document for further details.
 
 #### <a name="faq14"> Why do I get a lot apache or rrdtool zombies in my process list?</a>
 
@@ -125,6 +119,12 @@ Before this all rrd files were set to 100G max values, now you can enable suppor
 
 rrdtool tune will change the max value when the interface speed is detected as being changed (min value will be set for anything 10M or over) or when you run the included script (./scripts/tune_port.php) - see [RRDTune doc](../Extensions/RRDTune.md)
 
+ SNMP ifInOctets and ifOutOctets are counters, which means they start at 0 (at device boot) and count up from there. LibreNMS records the value every 5 minutes and uses the difference between the previous value and the current value to calculate rate. (Also, this value resets to 0 when it hits the max value)
+
+Now, when the value is not recorded for awhile RRD (our time series storage) does not record a 0, it records the last value, otherwise, there would be even worse problems. Then finally we get the current ifIn/OutOctets value and record that. Now, it appears as though all of the traffic since it stopped getting values have occurred in the last 5 minute interval.
+
+So whenever you see spikes like this, it means we have not received data from the device for several polling intervals. The cause can vary quite a bit: bad snmp implementations, intermittant network connectivity, broken poller, and more.
+
 #### <a name="faq17"> Why do I see gaps in my graphs?</a>
 
 This is most commonly due to the poller not being able to complete it's run within 300 seconds. Check which devices are causing this by going to /poll-log/ within the Web interface.
@@ -136,12 +136,12 @@ If you poll a large number of devices / ports then it's recommended to run a loc
 Running RRDCached is also highly advised in larger installs but has benefits no matter the size.
 
 #### <a name="faq16"> How do I change the IP / hostname of a device?</a>
-
 There is a host rename tool called renamehost.php in your librenms root directory. When renaming you are also changing the device's IP / hostname address for monitoring.
 Usage:
 ```bash
 ./renamehost.php <old hostname> <new hostname>
 ```
+You can also rename a device in the Web UI by going to the device, then clicking settings Icon -> Edit.
 
 #### <a name="faq19"> My device doesn't finish polling within 300 seconds</a>
 
@@ -157,7 +157,7 @@ Run `./validate.php` as root from within your install.
 
 Re-run `./validate.php` once you've resolved any issues raised.
 
-You have an odd issue - we'd suggest you join our irc channel to discuss.
+You have an odd issue - we'd suggest you join our [discord server](https://t.libren.ms/discord) to discuss.
 
 #### <a name="faq21"> What do the values mean in my graphs?</a>
 
@@ -182,7 +182,7 @@ here are those values:
 #### <a name="faq22"> Why does a device show as a warning?</a>
 
 This is indicating that the device has rebooted within the last 24 hours (by default). If you want to adjust this 
-threshold then you can do so by setting `$config['uptime_warning']` in config.php. The value must be in seconds.
+threshold then you can do so by setting `$config['uptime_warning'] = '84600';` in `config.php`. The value must be in seconds.
 
 #### <a name="faq23"> Why do I not see all interfaces in the Overall traffic graph for a device?</a>
 
@@ -351,3 +351,7 @@ mysql -u librenms -p < sql-schema/202.sql
 ### <a name="faq32"> Why would alert un-mute itself?</a> 
 If alert un-mutes itself then it most likely means that the alert cleared and is then triggered again.
 Please review eventlog as it will tell you in there.
+
+### <a name ="faq33"> How do I change the Device Type?</a>
+You can change the Device Type by going to the device you would like to change, then click on the Gear Icon -> Edit.
+If you would like to define custom types, we suggest using [Device Groups](/Extensions/Device-Groups/). They will be listed in the menu similarly to device types.
