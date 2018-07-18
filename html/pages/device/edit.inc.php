@@ -1,27 +1,34 @@
 <?php
 
+use LibreNMS\Authentication\Auth;
+
 $no_refresh = true;
-$config['memcached']['enable'] = false;
 
 $link_array = array('page'    => 'device',
     'device'  => $device['device_id'],
     'tab' => 'edit');
 
-if ($_SESSION['userlevel'] < '7') {
+if (!Auth::user()->hasGlobalAdmin()) {
     print_error("Insufficient Privileges");
 } else {
     $panes['device']   = 'Device Settings';
     $panes['snmp']     = 'SNMP';
-    $panes['ports']    = 'Port Settings';
+    if (!$device['snmp_disable']) {
+        $panes['ports']    = 'Port Settings';
+    }
 
     if (count($config['os'][$device['os']]['icons'])) {
         $panes['icon']  = 'Icon';
     }
 
-    $panes['apps']     = 'Applications';
+    if (!$device['snmp_disable']) {
+        $panes['apps']     = 'Applications';
+    }
     $panes['alerts']   = 'Alert Settings';
     $panes['alert-rules'] = 'Alert Rules';
-    $panes['modules']  = 'Modules';
+    if (!$device['snmp_disable']) {
+        $panes['modules']  = 'Modules';
+    }
 
     if ($config['show_services']) {
         $panes['services'] = 'Services';
@@ -37,9 +44,11 @@ if ($_SESSION['userlevel'] < '7') {
         $panes['wireless-sensors'] = 'Wireless Sensors';
     }
 
-    $panes['storage']  = 'Storage';
-    $panes['processors']  = 'Processors';
-    $panes['mempools']  = 'Memory';
+    if (!$device['snmp_disable']) {
+        $panes['storage']  = 'Storage';
+        $panes['processors']  = 'Processors';
+        $panes['mempools']  = 'Memory';
+    }
     $panes['misc']     = 'Misc';
 
     $panes['component'] = 'Components';

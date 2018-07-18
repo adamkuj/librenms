@@ -12,6 +12,8 @@
  * the source code distribution for details.
  */
 
+use LibreNMS\Authentication\Auth;
+
 if (isset($widget_settings['mode_select']) && $widget_settings['mode_select'] !== '') {
     $mode = $widget_settings['mode_select'];
 } elseif (isset($_SESSION["map_view"]) && is_numeric($_SESSION["map_view"])) {
@@ -176,10 +178,10 @@ if (defined('SHOW_SETTINGS')) {
 
         $sql = 'SELECT `D`.`hostname`, `D`.`sysName`, `D`.`device_id`, `D`.`status`, `D`.`uptime`, `D`.`os`, `D`.`icon`, `D`.`ignore`, `D`.`disabled` FROM `devices` AS `D`';
 
-        if (is_normal_user() === true) {
+        if (!Auth::user()->hasGlobalRead()) {
             $sql .= ' , `devices_perms` AS P WHERE D.`device_id` = P.`device_id` AND P.`user_id` = ? AND ';
             $param = array(
-                $_SESSION['user_id']
+                Auth::id()
             );
         } else {
             $sql .= ' WHERE ';
@@ -209,7 +211,7 @@ if (defined('SHOW_SETTINGS')) {
                 $deviceLabel = "label-default";
                 $host_ignored_count++;
             } elseif ($device['status'] == '1') {
-                if (($device['uptime'] < $config['uptime_warning']) && ($device['uptime'] != '0')) {
+                if (($device['uptime'] < $config['uptime_warning']) && ($device['uptime'] != 0)) {
                     $deviceState = 'warn';
                     $deviceLabel = 'label-warning';
                     $deviceLabelOld = 'availability-map-oldview-box-warn';
@@ -256,8 +258,14 @@ if (defined('SHOW_SETTINGS')) {
     }
 
     if (($mode == 1 || $mode == 2) && ($config['show_services'] != 0)) {
-        $service_query = 'select `S`.`service_type`, `S`.`service_id`, `S`.`service_desc`, `S`.`service_status`, `D`.`hostname`, `D`.`sysName`, `D`.`device_id`, `D`.`os`, `D`.`icon` from services S, devices D where `S`.`device_id` = `D`.`device_id` ORDER BY '.$serviceOrderBy.';';
-        $services = dbFetchRows($service_query);
+        if (Auth::user()->hasGlobalRead()) {
+            $service_query = 'select `S`.`service_type`, `S`.`service_id`, `S`.`service_desc`, `S`.`service_status`, `D`.`hostname`, `D`.`sysName`, `D`.`device_id`, `D`.`os`, `D`.`icon` from services S, devices D where `S`.`device_id` = `D`.`device_id` ORDER BY '.$serviceOrderBy.';';
+            $service_par = array();
+        } else {
+            $service_query = 'select `S`.`service_type`, `S`.`service_id`, `S`.`service_desc`, `S`.`service_status`, `D`.`hostname`, `D`.`sysName`, `D`.`device_id`, `D`.`os`, `D`.`icon` from services S, devices D, devices_perms P where `S`.`device_id` = `D`.`device_id` AND D.device_id = P.device_id AND P.user_id = ? ORDER BY '.$serviceOrderBy.';';
+            $service_par = array(Auth::id());
+        }
+        $services = dbFetchRows($service_query, $service_par);
         if (count($services) > 0) {
             foreach ($services as $service) {
                 if ($service['service_status'] == '0') {

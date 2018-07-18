@@ -40,6 +40,15 @@ if (!$auth) {
 } else {
     if (isset($config['graph_types'][$type][$subtype]['descr'])) {
         $title .= " :: " . $config['graph_types'][$type][$subtype]['descr'];
+    } elseif ($type == "device" && $subtype == "collectd") {
+        $title .= " :: " . ucfirst($subtype) . " :: " . $vars['c_plugin'];
+        if (isset($vars['c_plugin_instance'])) {
+            $title .= " - " . $vars['c_plugin_instance'];
+        }
+        $title .= " - " . $vars['c_type'];
+        if (isset($vars['c_type_instance'])) {
+            $title .= " - " . $vars['c_type_instance'];
+        }
     } else {
         $title .= " :: " . ucfirst($subtype);
     }
@@ -71,7 +80,6 @@ if (!$auth) {
 
     print_optionbar_end();
 
-    print_optionbar_start();
 
     $thumb_array = $config['graphs']['row']['normal'];
 
@@ -146,8 +154,6 @@ if (!$auth) {
         echo(generate_link("Show RRD Command", $vars, array('page' => "graphs", 'showcommand' => "yes")));
     }
     echo('</center>');
-
-    print_optionbar_end();
 
     echo generate_graph_js_state($graph_array);
 

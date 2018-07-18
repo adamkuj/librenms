@@ -299,12 +299,29 @@ function rewrite_fortinet_hardware($hardware)
         '.1.3.6.1.4.1.12356.101.1.800'   => 'FortiGate 80C',
         '.1.3.6.1.4.1.12356.1688'        => 'FortiMail 2000A',
         '.1.3.6.1.4.1.12356.103.1.1000'  => 'FortiManager 100',
-        '.1.3.6.1.4.1.12356.103.1.20000' => 'FortiManager 2000XL',
+        '.1.3.6.1.4.1.12356.103.1.1001'  => 'FortiManager VM',
+        '.1.3.6.1.4.1.12356.103.1.1003'  => 'FortiManager 100C',
+        '.1.3.6.1.4.1.12356.103.1.2004'  => 'FortiManager 200D',
+        '.1.3.6.1.4.1.12356.103.1.2005'  => 'FortiManager 200E',
         '.1.3.6.1.4.1.12356.103.1.3004'  => 'FortiManager 300D',
-        '.1.3.6.1.4.1.12356.103.1.30000' => 'FortiManager 3000',
-        '.1.3.6.1.4.1.12356.103.1.30002' => 'FortiManager 3000B',
+        '.1.3.6.1.4.1.12356.103.1.3005'  => 'FortiManager 300E',
         '.1.3.6.1.4.1.12356.103.1.4000'  => 'FortiManager 400',
         '.1.3.6.1.4.1.12356.103.1.4001'  => 'FortiManager 400A',
+        '.1.3.6.1.4.1.12356.103.1.4002'  => 'FortiManager 400B',
+        '.1.3.6.1.4.1.12356.103.1.4003'  => 'FortiManager 400C',
+        '.1.3.6.1.4.1.12356.103.1.4005'  => 'FortiManager 400E',
+        '.1.3.6.1.4.1.12356.103.1.10003'  => 'FortiManager 1000C',
+        '.1.3.6.1.4.1.12356.103.1.10004'  => 'FortiManager 1000D',
+        '.1.3.6.1.4.1.12356.103.1.20005'  => 'FortiManager 2000E',
+        '.1.3.6.1.4.1.12356.103.1.20000'  => 'FortiManager 2000XL',
+        '.1.3.6.1.4.1.12356.103.1.30000'  => 'FortiManager 3000',
+        '.1.3.6.1.4.1.12356.103.1.30002'  => 'FortiManager 3000B',
+        '.1.3.6.1.4.1.12356.103.1.30003'  => 'FortiManager 3000C',
+        '.1.3.6.1.4.1.12356.103.1.30006'  => 'FortiManager 3000F',
+        '.1.3.6.1.4.1.12356.103.1.39005'  => 'FortiManager 3900E',
+        '.1.3.6.1.4.1.12356.103.1.40004'  => 'FortiManager 4000D',
+        '.1.3.6.1.4.1.12356.103.1.40005'  => 'FortiManager 4000E',
+        '.1.3.6.1.4.1.12356.103.1.50011'  => 'FortiManager 5001A',
         '.1.3.6.1.4.1.12356.106.1.50030' => 'FortiSwitch 5003A',
         '.1.3.6.1.4.1.12356.101.1.510'   => 'FortiWiFi 50B',
         '.1.3.6.1.4.1.12356.101.1.610'   => 'FortiWiFi 60',
@@ -397,6 +414,8 @@ function rewrite_extreme_hardware($hardware)
         '.1.3.6.1.4.1.1916.2.141' => 'Summit x480-48x',
         '.1.3.6.1.4.1.1916.2.167' => 'Summit x670-48x',
         '.1.3.6.1.4.1.1916.2.168' => 'Summit x670v-48x',
+        '.1.3.6.1.4.1.1916.2.118' => 'Summit X650-24x(SSns)',
+        '.1.3.6.1.4.1.1916.2.139' => 'Summit X480-24x(10G4X)',
     );
 
     // $hardware = array_str_replace($rewrite_extreme_hardware, $hardware);
@@ -837,6 +856,27 @@ function rewrite_ironware_hardware($hardware)
         'snCer2048FX'                            => 'NetIron CER 2048F + 2x10G',
         'snCer2048CX'                            => 'NetIron CER 2048C + 2x10G',
         'snTI2X24Router'                         => 'Stackable TurboIron-X24',
+        'snBrocadeMLXe4Router'                   => 'NetIron MLXe-4',
+        'snBrocadeMLXe8Router'                   => 'NetIron MLXe-8',
+        'snBrocadeMLXe16Router'                  => 'NetIron MLXe-16',
+        'snBrocadeMLXe32Router'                  => 'NetIron MLXe-32',
+        'snICX643024Switch'                      => 'Brocade ICX 6430 24-port Switch',
+        'snICX643048Switch'                      => 'Brocade ICX 6430 48-port Switch',
+        'snICX645024Switch'                      => 'Brocade ICX 6450 24-port Switch',
+        'snICX645048Switch'                      => 'Brocade ICX 6450 48-port Switch',
+        'snICX661024Switch'                      => 'Brocade ICX 6610 24-port Switch',
+        'snICX661048Switch'                      => 'Brocade ICX 6610 48-port Switch',
+        'snICX665064Switch'                      => 'Brocade ICX 6650 64-port Switch',
+        'snICX725024Switch'                      => 'Brocade ICX 7250 24-port Switch',
+        'snICX725048Switch'                      => 'Brocade ICX 7250 48-port Switch',
+        'snICX745024Switch'                      => 'Brocade ICX 7450 24-port Switch',
+        'snICX745048Switch'                      => 'Brocade ICX 7450 48-port Switch',
+        'snFastIronStackICX6430Switch'           => 'Brocade ICX 6430 Switch stack',
+        'snFastIronStackICX6450Switch'           => 'Brocade ICX 6450 Switch stack',
+        'snFastIronStackICX6610Switch'           => 'Brocade ICX 6610 Switch stack',
+        'snFastIronStackICX7250Switch'           => 'Brocade ICX 7250 Switch stack',
+        'snFastIronStackICX7450Switch'           => 'Brocade ICX 7450 Switch stack',
+        'snFastIronStackICX7750Switch'           => 'Brocade ICX 7750 Switch stack',
     );
 
     $hardware = array_str_replace($rewrite_ironware_hardware, $hardware);
@@ -939,6 +979,8 @@ function rewrite_junos_hardware($hardware)
         'jnxProductNameMX80'           => 'MX80',
         'jnxProductName'               => '',
         'jnxProductQFX510048S6Q'       => 'QFX5100-48S6Q',
+        'jnxProductQFX511048S4Q'       => 'QFX5110-48S4Q',
+        'jnxProductQFX510096S8Q'       => 'QFX5100-96S8Q',
     );
 
 
@@ -1294,6 +1336,12 @@ function rewrite_brocade_fc_switches($descr)
         case "148":
             $hardware = "Brocade 7840 Switch";
             break;
+        case "162":
+            $hardware = "Brocade G620 Switch";
+            break;
+        case "170":
+            $hardware = "Brocade G610 Switch";
+            break;
         default:
             $hardware = "Unknown Brocade FC Switch";
     }
@@ -1431,4 +1479,96 @@ function return_number($value)
         $value = $temp_response[0];
     }
     return $value;
+}
+
+function get_units_from_sensor($sensor)
+{
+    switch ($sensor['sensor_class']) {
+        case 'airflow':
+            return 'cfm';
+        case 'current':
+            return 'A';
+        case 'dbm':
+        case 'signal':
+            return 'dBm';
+        case 'fanspeed':
+            return 'rpm';
+        case 'frequency':
+            return 'Hz';
+        case 'charge':
+        case 'humidity':
+        case 'load':
+            return '%';
+        case 'cooling':
+        case 'power':
+            return 'W';
+        case 'pressure':
+            return 'kPa';
+        case 'runtime':
+            return 'Min';
+        case 'snr':
+            return 'SNR';
+        case 'state':
+            return '#';
+        case 'temperature':
+            return 'C';
+        case 'voltage':
+            return 'V';
+        default:
+            return '';
+    }
+}
+
+function parse_entity_state($state, $value)
+{
+    $data = array(
+        'entStateOper' => array(
+            1 => array('text' => 'unavailable', 'color' => 'default'),
+            2 => array('text' => 'disabled', 'color' => 'danger'),
+            3 => array('text' => 'enabled', 'color' => 'success'),
+            4 => array('text' => 'testing', 'color' => 'warning'),
+        ),
+        'entStateUsage' => array(
+            1 => array('text' => 'unavailable', 'color' => 'default'),
+            2 => array('text' => 'idle', 'color' => 'info'),
+            3 => array('text' => 'active', 'color' => 'success'),
+            4 => array('text' => 'busy', 'color' => 'success'),
+        ),
+        'entStateStandby' => array(
+            1 => array('text' => 'unavailable', 'color' => 'default'),
+            2 => array('text' => 'hotStandby', 'color' => 'info'),
+            3 => array('text' => 'coldStandby', 'color' => 'info'),
+            4 => array('text' => 'providingService', 'color' => 'success'),
+        ),
+        'entStateAdmin' => array(
+            1 => array('text' => 'unknown', 'color' => 'default'),
+            2 => array('text' => 'locked', 'color' => 'info'),
+            3 => array('text' => 'shuttingDown', 'color' => 'warning'),
+            4 => array('text' => 'unlocked', 'color' => 'success'),
+        ),
+    );
+
+    if (isset($data[$state][$value])) {
+        return $data[$state][$value];
+    }
+
+    return array('text'=>'na', 'color'=>'default');
+}
+
+function parse_entity_state_alarm($bits)
+{
+    // not sure if this is correct
+    $data = array(
+        0 => array('text' => 'unavailable', 'color' => 'default'),
+        1 => array('text' => 'underRepair', 'color' => 'warning'),
+        2 => array('text' => 'critical', 'color' => 'danger'),
+        3 => array('text' => 'major', 'color' => 'danger'),
+        4 => array('text' => 'minor', 'color' => 'info'),
+        5 => array('text' => 'warning', 'color' => 'warning'),
+        6 => array('text' => 'indeterminate', 'color' => 'default'),
+    );
+
+    $alarms = str_split(base_convert($bits, 16, 2));
+    $active_alarms = array_filter($alarms);
+    return array_intersect_key($data, $active_alarms);
 }

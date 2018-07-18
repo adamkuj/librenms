@@ -20,7 +20,6 @@
 //
 // Please don't edit this file -- make changes to the configuration array in config.php
 //
-error_reporting(E_ERROR|E_PARSE|E_CORE_ERROR|E_COMPILE_ERROR);
 
 // Default directories
 $config['project_name'] = 'LibreNMS';
@@ -42,12 +41,12 @@ $config['db_socket']             = null;
 $config['own_hostname'] = 'localhost';
 
 // Location of executables
-$config['fping']                    = '/usr/bin/fping';
-$config['fping6']                   = 'fping6';
-$config['fping_options']['retries'] = 3;
+//$config['fping']                    = '/usr/sbin/fping';
+//$config['fping6']                   = '/usr/sbin/fping6';
+// https://docs.librenms.org/Support/Configuration/#fping
 $config['fping_options']['timeout'] = 500;
 $config['fping_options']['count']   = 3;
-$config['fping_options']['millisec'] = 200;
+$config['fping_options']['interval'] = 500;
 $config['snmpwalk']                  = '/usr/bin/snmpwalk';
 $config['snmpget']                   = '/usr/bin/snmpget';
 $config['snmpbulkwalk']              = '/usr/bin/snmpbulkwalk';
@@ -61,12 +60,6 @@ $config['ipmitool']       = '/usr/bin/ipmitool';
 $config['virsh']          = '/usr/bin/virsh';
 $config['dot']            = '/usr/bin/dot';
 $config['sfdp']           = '/usr/bin/sfdp';
-
-// Memcached - Keep immediate statistics
-$config['memcached']['enable'] = false;
-$config['memcached']['host']   = 'localhost';
-$config['memcached']['port']   = 11211;
-$config['memcached']['ttl']    = 240;
 
 $config['slow_statistics'] = true;
 // THIS WILL CHANGE TO FALSE IN FUTURE
@@ -95,7 +88,7 @@ if (isset($_SERVER['SERVER_NAME']) && isset($_SERVER['SERVER_PORT'])) {
 }
 
 $config['project_home']   = 'http://www.librenms.org/';
-$config['project_issues'] = 'https://github.com/librenms/librenms/issues';
+$config['project_issues'] = 'https://community.librenms.org/c/help';
 $config['github_api']   = 'https://api.github.com/repos/librenms/librenms/';
 $config['site_style']     = 'light';
 // Options are dark or light
@@ -128,14 +121,14 @@ $config['old_graphs'] = 1;
 $config['int_customers'] = 1;
 // Enable Customer Port Parsing
 $config['customers_descr'] = 'cust';
-$config['transit_descr']   = 'transit';
-// Add custom transit descriptions (can be an array)
-$config['peering_descr'] = 'peering';
-// Add custom peering descriptions (can be an array)
-$config['core_descr'] = 'core';
-// Add custom core descriptions (can be an array)
-$config['custom_descr'] = '';
-// Add custom interface descriptions (can be an array)
+$config['transit_descr'][]   = 'transit';
+// Add custom transit descriptions (can be an string)
+$config['peering_descr'][] = 'peering';
+// Add custom peering descriptions (can be an string)
+$config['core_descr'][] = 'core';
+// Add custom core descriptions (can be an string)
+$config['custom_descr'][] = '';
+// Add custom interface descriptions (can be an string)
 $config['int_transit'] = 1;
 // Enable Transit Types
 $config['int_peering'] = 1;
@@ -164,7 +157,7 @@ $config['snmp']['transports'] = array(
     'tcp6',
 );
 
-$config['snmp']['version'] = 'v2c';
+$config['snmp']['version'] = ['v2c', 'v3', 'v1'];
 // Default version to use
 // SNMPv1/2c default settings
 $config['snmp']['community'][0] = 'public';
@@ -231,20 +224,26 @@ $config['uptime_warning'] = '84600';
 // Cosmetics
 $config['rrdgraph_def_text']  = '-c BACK#EEEEEE00 -c SHADEA#EEEEEE00 -c SHADEB#EEEEEE00 -c FONT#000000 -c CANVAS#FFFFFF00 -c GRID#a5a5a5';
 $config['rrdgraph_def_text'] .= ' -c MGRID#FF9999 -c FRAME#5e5e5e -c ARROW#5e5e5e -R normal';
-$config['rrdgraph_real_95th'] = false;
+$config['rrdgraph_real_percentile'] = false;
+$config['percentile_value'] = 95;
 // Set to TRUE if you want to display the 95% based on the highest value. (aka real 95%)
 $config['overlib_defaults'] = ",FGCOLOR,'#ffffff', BGCOLOR, '#e5e5e5', BORDER, 5, CELLPAD, 4, CAPCOLOR, '#555555', TEXTCOLOR, '#3e3e3e'";
-$config['web_mouseover']    = true;
+
 // Set this to false if you want to disable the mouseover popup graphs
-$list_colour_a   = '#ffffff';
-$list_colour_b   = '#eeeeee';
-$list_colour_a_a = '#f9f9f9';
-$list_colour_a_b = '#f0f0f0';
-$list_colour_b_a = '#f0f0f0';
-$list_colour_b_b = '#e3e3e3';
-$list_highlight  = '#ffcccc';
-$warn_colour_a   = '#ffeeee';
-$warn_colour_b   = '#ffcccc';
+$config['web_mouseover']    = true;
+
+// list colors
+$config['list_colour'] = array(
+    'even' => '#ffffff',
+    'even_alt' => '#f9f9f9',
+    'even_alt2' => '#f0f0f0',
+    'odd' => '#eeeeee',
+    'odd_alt' => '#f0f0f0',
+    'odd_alt2' => '#e3e3e3',
+    'highlight' => '#ffcccc',
+);
+$config['warn_colour'] = '#ffeeee';
+$config['warn_colour_alt'] = '#ffcccc';
 
 // $config['graph_colours'] = array("000066","330066","990066","990066","CC0033","FF0000"); // Purple to Red
 // $config['graph_colours'] = array("006600","336600","996600","996600","CC3300","FF0000"); // Green to Red
@@ -600,6 +599,7 @@ $config['irc_authtime']     = 3;
 $config['irc_debug']        = false;
 $config['irc_alert']        = false;
 $config['irc_alert_utf8']   = false;
+$config['irc_alert_short']  = false;
 $config['irc_ctcp']         = false;
 $config['irc_ctcp_version'] = "LibreNMS IRCbot. https://www.librenms.org/";
 
@@ -635,6 +635,11 @@ $config['auth_ldap_cache_ttl'] = 300;
 // Active Directory Authentication
 $config['auth_ad_user_filter'] = "(objectclass=user)";
 $config['auth_ad_group_filter'] = "(objectclass=group)";
+
+// Single sign-on defaults
+$config['sso']['create_users'] = true;
+$config['sso']['update_users'] = true;
+$config['sso']['user_attr'] = 'REMOTE_USER';
 
 // Sensors
 $config['allow_entity_sensor']['amperes']     = 1;
@@ -724,90 +729,90 @@ $config['warn']['ifdown'] = true;
 // Show down interfaces
 // List of poller modules. Need to be in the array to be
 // considered for execution.
-$config['poller_modules']['unix-agent']                  = 0;
-$config['poller_modules']['os']                          = 1;
-$config['poller_modules']['ipmi']                        = 1;
-$config['poller_modules']['sensors']                     = 1;
-$config['poller_modules']['processors']                  = 1;
-$config['poller_modules']['mempools']                    = 1;
-$config['poller_modules']['storage']                     = 1;
-$config['poller_modules']['netstats']                    = 1;
-$config['poller_modules']['hr-mib']                      = 1;
-$config['poller_modules']['ucd-mib']                     = 1;
-$config['poller_modules']['ipSystemStats']               = 1;
-$config['poller_modules']['ports']                       = 1;
-$config['poller_modules']['bgp-peers']                   = 1;
-$config['poller_modules']['junose-atm-vp']               = 0;
-$config['poller_modules']['toner']                       = 0;
-$config['poller_modules']['ucd-diskio']                  = 1;
-$config['poller_modules']['wifi']                        = 0;
-$config['poller_modules']['wireless']                    = 1;
-$config['poller_modules']['ospf']                        = 1;
-$config['poller_modules']['cisco-ipsec-flow-monitor']    = 0;
-$config['poller_modules']['cisco-remote-access-monitor'] = 0;
-$config['poller_modules']['cisco-cef']                   = 0;
-$config['poller_modules']['cisco-sla']                   = 0;
-$config['poller_modules']['cisco-mac-accounting']        = 0;
-$config['poller_modules']['cipsec-tunnels']              = 0;
-$config['poller_modules']['cisco-ace-loadbalancer']      = 0;
-$config['poller_modules']['cisco-ace-serverfarms']       = 0;
-$config['poller_modules']['cisco-asa-firewall']          = 0;
-$config['poller_modules']['cisco-voice']                 = 0;
-$config['poller_modules']['cisco-cbqos']                 = 0;
-$config['poller_modules']['cisco-otv']                   = 0;
-$config['poller_modules']['cisco-vpdn']                  = 0;
-$config['poller_modules']['netscaler-vsvr']              = 0;
-$config['poller_modules']['aruba-controller']            = 0;
-$config['poller_modules']['entity-physical']             = 1;
-$config['poller_modules']['applications']                = 1;
-$config['poller_modules']['mib']                         = 0;
-$config['poller_modules']['stp']                         = 1;
-$config['poller_modules']['ntp']                         = 1;
-$config['poller_modules']['services']                    = 1;
-$config['poller_modules']['loadbalancers']               = 0;
-$config['poller_modules']['mef']                         = 0;
-$config['poller_modules']['tnms-nbi']                    = 0;
+$config['poller_modules']['unix-agent']                  = false;
+$config['poller_modules']['os']                          = true;
+$config['poller_modules']['ipmi']                        = true;
+$config['poller_modules']['sensors']                     = true;
+$config['poller_modules']['processors']                  = true;
+$config['poller_modules']['mempools']                    = true;
+$config['poller_modules']['storage']                     = true;
+$config['poller_modules']['netstats']                    = true;
+$config['poller_modules']['hr-mib']                      = true;
+$config['poller_modules']['ucd-mib']                     = true;
+$config['poller_modules']['ipSystemStats']               = true;
+$config['poller_modules']['ports']                       = true;
+$config['poller_modules']['bgp-peers']                   = true;
+$config['poller_modules']['junose-atm-vp']               = false;
+$config['poller_modules']['toner']                       = false;
+$config['poller_modules']['ucd-diskio']                  = true;
+$config['poller_modules']['wifi']                        = false;
+$config['poller_modules']['wireless']                    = true;
+$config['poller_modules']['ospf']                        = true;
+$config['poller_modules']['cisco-ipsec-flow-monitor']    = false;
+$config['poller_modules']['cisco-remote-access-monitor'] = false;
+$config['poller_modules']['cisco-cef']                   = false;
+$config['poller_modules']['cisco-sla']                   = false;
+$config['poller_modules']['cisco-mac-accounting']        = false;
+$config['poller_modules']['cipsec-tunnels']              = false;
+$config['poller_modules']['cisco-ace-loadbalancer']      = false;
+$config['poller_modules']['cisco-ace-serverfarms']       = false;
+$config['poller_modules']['cisco-asa-firewall']          = false;
+$config['poller_modules']['cisco-voice']                 = false;
+$config['poller_modules']['cisco-cbqos']                 = false;
+$config['poller_modules']['cisco-otv']                   = false;
+$config['poller_modules']['cisco-vpdn']                  = false;
+$config['poller_modules']['netscaler-vsvr']              = false;
+$config['poller_modules']['aruba-controller']            = false;
+$config['poller_modules']['entity-physical']             = true;
+$config['poller_modules']['entity-state']                = false;
+$config['poller_modules']['applications']                = true;
+$config['poller_modules']['mib']                         = false;
+$config['poller_modules']['stp']                         = true;
+$config['poller_modules']['ntp']                         = true;
+$config['poller_modules']['loadbalancers']               = false;
+$config['poller_modules']['mef']                         = false;
 
 // List of discovery modules. Need to be in this array to be
 // considered for execution.
-$config['discovery_modules']['os']                   = 1;
-$config['discovery_modules']['ports']                = 1;
-$config['discovery_modules']['ports-stack']          = 1;
-$config['discovery_modules']['entity-physical']      = 1;
-$config['discovery_modules']['processors']           = 1;
-$config['discovery_modules']['mempools']             = 1;
-$config['discovery_modules']['cisco-vrf-lite']       = 1;
-$config['discovery_modules']['cisco-mac-accounting'] = 0;
-$config['discovery_modules']['cisco-pw']             = 0;
-$config['discovery_modules']['cisco-vrf']            = 0;
-$config['discovery_modules']['cisco-cef']            = 0;
-$config['discovery_modules']['cisco-sla']            = 0;
-$config['discovery_modules']['cisco-cbqos']          = 0;
-$config['discovery_modules']['cisco-otv']            = 0;
-$config['discovery_modules']['ipv4-addresses']       = 1;
-$config['discovery_modules']['ipv6-addresses']       = 1;
-$config['discovery_modules']['route']                = 0;
-$config['discovery_modules']['sensors']              = 1;
-$config['discovery_modules']['storage']              = 1;
-$config['discovery_modules']['hr-device']            = 1;
-$config['discovery_modules']['discovery-protocols']  = 1;
-$config['discovery_modules']['arp-table']            = 1;
-$config['discovery_modules']['discovery-arp']        = 0;
-$config['discovery_modules']['junose-atm-vp']        = 0;
-$config['discovery_modules']['bgp-peers']            = 1;
-$config['discovery_modules']['vlans']                = 1;
-$config['discovery_modules']['vmware-vminfo']        = 0;
-$config['discovery_modules']['libvirt-vminfo']       = 0;
-$config['discovery_modules']['toner']                = 0;
-$config['discovery_modules']['ucd-diskio']           = 1;
-$config['discovery_modules']['applications']         = 0;
-$config['discovery_modules']['services']             = 1;
-$config['discovery_modules']['stp']                  = 1;
-$config['discovery_modules']['ntp']                  = 1;
-$config['discovery_modules']['loadbalancers']        = 0;
-$config['discovery_modules']['mef']                  = 0;
-$config['discovery_modules']['wireless']             = 1;
-$config['discovery_modules']['fdb-table']            = 1;
+$config['discovery_modules']['os']                   = true;
+$config['discovery_modules']['ports']                = true;
+$config['discovery_modules']['ports-stack']          = true;
+$config['discovery_modules']['entity-physical']      = true;
+$config['discovery_modules']['entity-state']         = false;
+$config['discovery_modules']['processors']           = true;
+$config['discovery_modules']['mempools']             = true;
+$config['discovery_modules']['cisco-vrf-lite']       = true;
+$config['discovery_modules']['cisco-mac-accounting'] = false;
+$config['discovery_modules']['cisco-pw']             = false;
+$config['discovery_modules']['vrf']                  = false;
+$config['discovery_modules']['cisco-cef']            = false;
+$config['discovery_modules']['cisco-sla']            = false;
+$config['discovery_modules']['cisco-cbqos']          = false;
+$config['discovery_modules']['cisco-otv']            = false;
+$config['discovery_modules']['ipv4-addresses']       = true;
+$config['discovery_modules']['ipv6-addresses']       = true;
+$config['discovery_modules']['route']                = false;
+$config['discovery_modules']['sensors']              = true;
+$config['discovery_modules']['storage']              = true;
+$config['discovery_modules']['hr-device']            = true;
+$config['discovery_modules']['discovery-protocols']  = true;
+$config['discovery_modules']['arp-table']            = true;
+$config['discovery_modules']['discovery-arp']        = false;
+$config['discovery_modules']['junose-atm-vp']        = false;
+$config['discovery_modules']['bgp-peers']            = true;
+$config['discovery_modules']['vlans']                = true;
+$config['discovery_modules']['vmware-vminfo']        = false;
+$config['discovery_modules']['libvirt-vminfo']       = false;
+$config['discovery_modules']['toner']                = false;
+$config['discovery_modules']['ucd-diskio']           = true;
+$config['discovery_modules']['applications']         = false;
+$config['discovery_modules']['services']             = true;
+$config['discovery_modules']['stp']                  = true;
+$config['discovery_modules']['ntp']                  = true;
+$config['discovery_modules']['loadbalancers']        = false;
+$config['discovery_modules']['mef']                  = false;
+$config['discovery_modules']['wireless']             = true;
+$config['discovery_modules']['fdb-table']            = true;
 // Enable daily updates
 $config['update'] = 1;
 
@@ -839,7 +844,8 @@ $config['dateformat']['mysql']['time']    = '%H:%i:%s';
 
 $config['enable_clear_discovery'] = 1;
 // Set this to 0 if you want to disable the web option to rediscover devices
-$config['force_ip_to_sysname']    = false;// Set to true if you want to use sysName in place of IPs
+$config['force_ip_to_sysname']          = false;// Set to true if you want to use sysName in place of IPs
+$config['force_hostname_to_sysname']    = false;// Set to true if you want to use sysNAme in place of a hostname, ie Dynamic DNS
 
 // Allow duplicate devices by sysName
 $config['allow_duplicate_sysName'] = false;// Set to true if you want to allow duplicate sysName's
@@ -852,7 +858,7 @@ $config['api_demo'] = 0;
 // Set this to 1 if you want to disable some untrusting features for the API
 // Distributed Poller-Settings
 $config['distributed_poller']                = false;
-$config['distributed_poller_name']           = file_get_contents('/proc/sys/kernel/hostname');
+$config['distributed_poller_name']           = php_uname('n');
 $config['distributed_poller_group']          = 0;
 $config['distributed_poller_memcached_host'] = 'example.net';
 $config['distributed_poller_memcached_port'] = '11211';
@@ -870,13 +876,13 @@ $config['ipmi']['type'][] = 'lan';
 $config['ipmi']['type'][] = 'imb';
 $config['ipmi']['type'][] = 'open';
 
-// Options needed for dyn config - do NOT edit
-$dyn_config['email_backend']     = array(
+// Options needed for dynamic config - do NOT edit
+$config['email_backend_options'] = array(
     'mail',
     'sendmail',
     'smtp',
 );
-$dyn_config['email_smtp_secure'] = array(
+$config['email_smtp_secure_options'] = array(
     '',
     'tls',
     'ssl',
@@ -927,6 +933,9 @@ $config['ignore_unmapable_port'] = false;
 $config['influxdb']['timeout']      = 0;
 $config['influxdb']['verifySSL']    = false;
 
+// Prometheus Push Default configuration
+$config['prometheus']['job']        = 'librenms';
+
 // Xirrus - Disable station/client polling if true as it may take a long time on larger/heavily used APs.
 $config['xirrus_disable_stations']  = false;
 
@@ -938,4 +947,14 @@ $config['graphite']['port']         = 2003;
 // HTTP and HTTPS, but they will be insecure. Setting this to $_SERVER["HTTPS"]
 // will send secure cookies when the site is being accessed over HTTPS, and
 // send insecure cookies when the site is being accessed over HTTP.
-$config['secure_cookies'] = $_SERVER["HTTPS"];
+$config['secure_cookies'] = isset($_SERVER["HTTPS"]) ? $_SERVER["HTTPS"] : false;
+
+// API config
+$config['api']['cors']['enabled'] = false;
+$config['api']['cors']['origin'] = '*';
+$config['api']['cors']['maxage'] = '86400';
+$config['api']['cors']['allowmethods'] = array('POST', 'GET', 'PUT', 'DELETE', 'PATCH');
+$config['api']['cors']['allowheaders'] = array('Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'X-Auth-Token');
+
+// Disk
+$config['bad_disk_regexp'] = [];
