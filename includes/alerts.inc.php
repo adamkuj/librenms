@@ -23,8 +23,10 @@
  */
 
 use LibreNMS\Alert\Template;
+use LibreNMS\Alert\AlertData;
 use LibreNMS\Alerting\QueryBuilderParser;
 use LibreNMS\Authentication\Auth;
+use LibreNMS\Alert\AlertUtil;
 
 /**
  * @param $rule
@@ -181,7 +183,6 @@ function RunRules($device_id)
             $inv = false;
         }
         d_echo(PHP_EOL);
-        $chk   = dbFetchRow("SELECT state FROM alerts WHERE rule_id = ? && device_id = ? ORDER BY id DESC LIMIT 1", array($rule['id'], $device_id));
         if (empty($rule['query'])) {
             $rule['query'] = GenSQL($rule['rule'], $rule['builder']);
         }
@@ -203,10 +204,12 @@ function RunRules($device_id)
         } else { //( $s > 0 && $inv == false ) {
             $doalert = false;
         }
+
+        $current_state = dbFetchCell("SELECT state FROM alerts WHERE rule_id = ? AND device_id = ? ORDER BY id DESC LIMIT 1", [$rule['id'], $device_id]);
         if ($doalert) {
-            if ($chk['state'] === "2") {
+            if ($current_state == 2) {
                 c_echo('Status: %ySKIP');
-            } elseif ($chk['state'] >= "1") {
+            } elseif ($current_state >= 1) {
                 c_echo('Status: %bNOCHG');
                 // NOCHG here doesn't mean no change full stop. It means no change to the alert state
                 // So we update the details column with any fresh changes to the alert output we might have.
@@ -218,21 +221,26 @@ function RunRules($device_id)
                 dbUpdate(array('details' => $details), 'alert_log', 'id = ?', array($alert_log['id']));
             } else {
                 $extra = gzcompress(json_encode(array('contacts' => GetContacts($qry), 'rule'=>$qry)), 9);
-                if (dbInsert(array('state' => 1, 'device_id' => $device_id, 'rule_id' => $rule['id'], 'details' => $extra), 'alert_log')) {
-                    if (!dbUpdate(array('state' => 1, 'open' => 1), 'alerts', 'device_id = ? && rule_id = ?', array($device_id,$rule['id']))) {
+                if (dbInsert(['state' => 1, 'device_id' => $device_id, 'rule_id' => $rule['id'], 'details' => $extra], 'alert_log')) {
+                    if (is_null($current_state)) {
                         dbInsert(array('state' => 1, 'device_id' => $device_id, 'rule_id' => $rule['id'], 'open' => 1,'alerted' => 0), 'alerts');
+                    } else {
+                        dbUpdate(['state' => 1, 'open' => 1], 'alerts', 'device_id = ? && rule_id = ?', [$device_id, $rule['id']]);
                     }
                     c_echo(PHP_EOL . 'Status: %rALERT');
                 }
             }
         } else {
-            if ($chk['state'] === "0") {
+            if (!is_null($current_state) && $current_state == 0) {
                 c_echo('Status: %bNOCHG');
             } else {
-                if (dbInsert(array('state' => 0, 'device_id' => $device_id, 'rule_id' => $rule['id']), 'alert_log')) {
-                    if (!dbUpdate(array('state' => 0, 'open' => 1, 'note' => ''), 'alerts', 'device_id = ? && rule_id = ?', array($device_id,$rule['id']))) {
-                        dbInsert(array('state' => 0, 'device_id' => $device_id, 'rule_id' => $rule['id'], 'open' => 1, 'alerted' => 0), 'alerts');
+                if (dbInsert(['state' => 0, 'device_id' => $device_id, 'rule_id' => $rule['id']], 'alert_log')) {
+                    if (is_null($current_state)) {
+                        dbInsert(['state' => 0, 'device_id' => $device_id, 'rule_id' => $rule['id'], 'open' => 1, 'alerted' => 0], 'alerts');
+                    } else {
+                        dbUpdate(['state' => 0, 'open' => 1, 'note' => ''], 'alerts', 'device_id = ? && rule_id = ?', [$device_id, $rule['id']]);
                     }
+
                     c_echo(PHP_EOL . 'Status: %gOK');
                 }
             }
@@ -275,7 +283,7 @@ function GetContacts($results)
         }
         if (is_numeric($result["device_id"])) {
             if ($config['alert']['syscontact'] == true) {
-                if (dbFetchCell("SELECT attrib_value FROM devices_attribs WHERE attrib_type = 'override_sysContact_bool' AND device_id = ?", array($result["device_id"])) === "1") {
+                if (dbFetchCell("SELECT attrib_value FROM devices_attribs WHERE attrib_type = 'override_sysContact_bool' AND device_id = ?", [$result["device_id"]])) {
                     $tmpa = dbFetchCell("SELECT attrib_value FROM devices_attribs WHERE attrib_type = 'override_sysContact_string' AND device_id = ?", array($result["device_id"]));
                 } else {
                     $tmpa = dbFetchCell("SELECT sysContact FROM devices WHERE device_id = ?", array($result["device_id"]));
@@ -389,7 +397,7 @@ function populate($txt, $wrap = true)
 function RunJail($code, $obj)
 {
     $ret = '';
-    eval($code);
+    @eval($code);
     return $ret;
 }//end RunJail()
 
@@ -806,38 +814,80 @@ function ExtTransports($obj)
     global $config;
     $tmp = false;
     $type  = new Template;
-    // To keep scrutinizer from naging because it doesnt understand eval
-    foreach ($config['alert']['transports'] as $transport => $opts) {
-        if (is_array($opts)) {
-            $opts = array_filter($opts);
+
+    // If alert transport mapping exists, override the default transports
+    $transport_maps = AlertUtil::getAlertTransports($obj['alert_id']);
+
+    if (!$transport_maps) {
+        $transport_maps = AlertUtil::getDefaultAlertTransports();
+        $legacy_transports  = AlertUtil::getDefaultTransportList();
+        foreach ($config['alert']['transports'] as $transport => $opts) {
+            if (in_array($transport, $legacy_transports)) {
+                // If it is a default transport type, then the alert has already been sent out, so skip
+                continue;
+            }
+            if (is_array($opts)) {
+                $opts = array_filter($opts);
+            }
+            $class  = 'LibreNMS\\Alert\\Transport\\' . ucfirst($transport);
+            if (($opts === true || !empty($opts)) && $opts != false && class_exists($class)) {
+                $transport_maps[] = [
+                    'transport_id' => null,
+                    'transport_type' => $transport,
+                    'opts' => $opts,
+                    'legacy' => true,
+                ];
+            }
         }
-        $class  = 'LibreNMS\\Alert\\Transport\\' . ucfirst($transport);
-        if (($opts === true || !empty($opts)) && $opts != false && class_exists($class)) {
-            $obj['transport'] = $transport;
-            $obj['alert']     = collect($obj);
+        unset($legacy_transports);
+    }
+
+    foreach ($transport_maps as $item) {
+        $class = 'LibreNMS\\Alert\\Transport\\'.ucfirst($item['transport_type']);
+        if (class_exists($class)) {
+            $transport_title = ($item['legacy'] === true) ? "{$item['transport_type']} (legacy)" : $item['transport_type'];
+            $obj['transport'] = $item['transport_type'];
+            $obj['alert']     = new AlertData($obj);
             $obj['title']     = $type->getTitle($obj);
             $obj['alert']['title'] = $obj['title'];
             $obj['msg']       = $type->getBody($obj);
-            echo $transport.' => ';
-            $instance = new $class;
-            $tmp = $instance->deliverAlert($obj, $opts);
-            $prefix = array( 0=>"recovery", 1=>$obj['severity']." alert", 2=>"acknowledgment" );
-            $prefix[3] = &$prefix[0];
-            $prefix[4] = &$prefix[0];
-            if ($tmp === true) {
-                echo 'OK';
-                log_event('Issued ' . $prefix[$obj['state']] . " for rule '" . $obj['name'] . "' to transport '" . $transport . "'", $obj['device_id'], 'alert', 1);
-            } elseif ($tmp === false) {
-                echo 'ERROR';
-                log_event('Could not issue ' . $prefix[$obj['state']] . " for rule '" . $obj['name'] . "' to transport '" . $transport . "'", $obj['device_id'], null, 5);
-            } else {
-                echo "ERROR: $tmp\r\n";
-                log_event('Could not issue ' . $prefix[$obj['state']] . " for rule '" . $obj['name'] . "' to transport '" . $transport . "' Error: " . $tmp, $obj['device_id'], 'error', 5);
-            }
+            echo "$transport_title => ";
+            $instance = new $class($item['transport_id']);
+            $tmp = $instance->deliverAlert($obj, $item['opts']);
+            AlertLog($tmp, $obj, $obj['transport']);
+            unset($instance);
             echo '; ';
         }
     }
+
+    if (count($transport_maps) === 0) {
+        echo 'No configured transports';
+    }
 }//end ExtTransports()
+
+// Log alert event
+function AlertLog($result, $obj, $transport)
+{
+    $prefix = [
+        0 => "recovery",
+        1 => $obj['severity']." alert",
+        2 => "acknowledgment"
+    ];
+    $prefix[3] = &$prefix[0];
+    $prefix[4] = &$prefix[0];
+    if ($result === true) {
+        echo 'OK';
+        log_event('Issued ' . $prefix[$obj['state']] . " for rule '" . $obj['name'] . "' to transport '" . $transport . "'", $obj['device_id'], 'alert', 1);
+    } elseif ($result === false) {
+        echo 'ERROR';
+        log_event('Could not issue ' . $prefix[$obj['state']] . " for rule '" . $obj['name'] . "' to transport '" . $transport . "'", $obj['device_id'], null, 5);
+    } else {
+        echo "ERROR: $result\r\n";
+        log_event('Could not issue ' . $prefix[$obj['state']] . " for rule '" . $obj['name'] . "' to transport '" . $transport . "' Error: " . $result, $obj['device_id'], 'error', 5);
+    }
+    return;
+}//end AlertLog()
+
 
 /**
  * Check if a device's all parent are down
