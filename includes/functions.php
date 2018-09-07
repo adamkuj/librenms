@@ -502,20 +502,16 @@ function getImageName($device, $use_database = true, $dir = 'images/os/')
 
 function renamehost($id, $new, $source = 'console')
 {
-    global $config;
+    $host = gethostbyid($id);
 
-    $host = dbFetchCell("SELECT `hostname` FROM `devices` WHERE `device_id` = ?", array($id));
     if (!is_dir(get_rrd_dir($new)) && rename(get_rrd_dir($host), get_rrd_dir($new)) === true) {
-        dbUpdate(array('hostname' => $new), 'devices', 'device_id=?', array($id));
+        dbUpdate(['hostname' => $new, 'ip' => null], 'devices', 'device_id=?', [$id]);
         log_event("Hostname changed -> $new ($source)", $id, 'system', 3);
-    } else {
-        log_event("Renaming of $host failed", $id, 'system', 5);
-        if (__FILE__ === $_SERVER['SCRIPT_FILE_NAME']) {
-            echo "Renaming of $host failed\n";
-        } else {
-            return "Renaming of $host failed\n";
-        }
+        return '';
     }
+
+    log_event("Renaming of $host failed", $id, 'system', 5);
+    return "Renaming of $host failed\n";
 }
 
 function delete_device($id)
@@ -968,21 +964,25 @@ function snmp2ipv6($ipv6_snmp)
 
 function get_astext($asn)
 {
-    global $config,$cache;
+    global $cache;
 
-    if (isset($config['astext'][$asn])) {
-        return $config['astext'][$asn];
-    } else {
-        if (isset($cache['astext'][$asn])) {
-            return $cache['astext'][$asn];
-        } else {
-            $result = dns_get_record("AS$asn.asn.cymru.com", DNS_TXT);
-            $txt = explode('|', $result[0]['txt']);
-            $result = trim(str_replace('"', '', $txt[4]));
-            $cache['astext'][$asn] = $result;
-            return $result;
-        }
+    if (Config::has("astext.$asn")) {
+        return Config::get("astext.$asn");
     }
+
+    if (isset($cache['astext'][$asn])) {
+        return $cache['astext'][$asn];
+    }
+
+    $result = dns_get_record("AS$asn.asn.cymru.com", DNS_TXT);
+    if (!empty($result[0]['txt'])) {
+        $txt = explode('|', $result[0]['txt']);
+        $result = trim($txt[4], ' "');
+        $cache['astext'][$asn] = $result;
+        return $result;
+    }
+
+    return '';
 }
 
 /**
@@ -1041,45 +1041,53 @@ function send_mail($emails, $subject, $message, $html = false)
 {
     global $config;
     if (is_array($emails) || ($emails = parse_email($emails))) {
-        $mail = new PHPMailer();
-        $mail->Hostname = php_uname('n');
+        d_echo("Attempting to email $subject to: " . implode('; ', array_keys($emails)) . PHP_EOL);
+        $mail = new PHPMailer(true);
+        try {
+            $mail->Hostname = php_uname('n');
 
-        foreach (parse_email($config['email_from']) as $from => $from_name) {
-            $mail->setFrom($from, $from_name);
+            foreach (parse_email($config['email_from']) as $from => $from_name) {
+                $mail->setFrom($from, $from_name);
+            }
+            foreach ($emails as $email => $email_name) {
+                $mail->addAddress($email, $email_name);
+            }
+            $mail->Subject = $subject;
+            $mail->XMailer = $config['project_name_version'];
+            $mail->CharSet = 'utf-8';
+            $mail->WordWrap = 76;
+            $mail->Body = $message;
+            if ($html) {
+                $mail->isHTML(true);
+            }
+            switch (strtolower(trim($config['email_backend']))) {
+                case 'sendmail':
+                    $mail->Mailer = 'sendmail';
+                    $mail->Sendmail = $config['email_sendmail_path'];
+                    break;
+                case 'smtp':
+                    $mail->isSMTP();
+                    $mail->Host       = $config['email_smtp_host'];
+                    $mail->Timeout    = $config['email_smtp_timeout'];
+                    $mail->SMTPAuth   = $config['email_smtp_auth'];
+                    $mail->SMTPSecure = $config['email_smtp_secure'];
+                    $mail->Port       = $config['email_smtp_port'];
+                    $mail->Username   = $config['email_smtp_username'];
+                    $mail->Password   = $config['email_smtp_password'];
+                    $mail->SMTPAutoTLS= $config['email_auto_tls'];
+                    $mail->SMTPDebug  = false;
+                    break;
+                default:
+                    $mail->Mailer = 'mail';
+                    break;
+            }
+            $mail->send();
+            return true;
+        } catch (phpmailerException $e) {
+            return $e->errorMessage();
+        } catch (Exception $e) {
+            return $e->getMessage();
         }
-        foreach ($emails as $email => $email_name) {
-            $mail->addAddress($email, $email_name);
-        }
-        $mail->Subject = $subject;
-        $mail->XMailer = $config['project_name_version'];
-        $mail->CharSet = 'utf-8';
-        $mail->WordWrap = 76;
-        $mail->Body = $message;
-        if ($html) {
-            $mail->isHTML(true);
-        }
-        switch (strtolower(trim($config['email_backend']))) {
-            case 'sendmail':
-                $mail->Mailer = 'sendmail';
-                $mail->Sendmail = $config['email_sendmail_path'];
-                break;
-            case 'smtp':
-                $mail->isSMTP();
-                $mail->Host       = $config['email_smtp_host'];
-                $mail->Timeout    = $config['email_smtp_timeout'];
-                $mail->SMTPAuth   = $config['email_smtp_auth'];
-                $mail->SMTPSecure = $config['email_smtp_secure'];
-                $mail->Port       = $config['email_smtp_port'];
-                $mail->Username   = $config['email_smtp_username'];
-                $mail->Password   = $config['email_smtp_password'];
-                $mail->SMTPAutoTLS= $config['email_auto_tls'];
-                $mail->SMTPDebug  = false;
-                break;
-            default:
-                $mail->Mailer = 'mail';
-                break;
-        }
-        return $mail->send() ? true : $mail->ErrorInfo;
     }
 
     return "No contacts found";
@@ -2340,6 +2348,8 @@ function cache_peeringdb()
             $rand = rand(3, 30);
             echo "No cached PeeringDB data found, sleeping for $rand seconds" . PHP_EOL;
             sleep($rand);
+            $peer_keep = [];
+            $ix_keep = [];
             foreach (dbFetchRows("SELECT `bgpLocalAs` FROM `devices` WHERE `disabled` = 0 AND `ignore` = 0 AND `bgpLocalAs` > 0 AND (`bgpLocalAs` < 64512 OR `bgpLocalAs` > 65535) AND `bgpLocalAs` < 4200000000 GROUP BY `bgpLocalAs`") as $as) {
                 $asn = $as['bgpLocalAs'];
                 $get = Requests::get($peeringdb_url . '/net?depth=2&asn=' . $asn, array(), array('proxy' => get_proxy()));
@@ -2362,7 +2372,7 @@ function cache_peeringdb()
                         );
                         $pdb_ix_id = dbInsert($insert, 'pdb_ix');
                     }
-                    $keep = $pdb_ix_id;
+                    $ix_keep[] = $pdb_ix_id;
                     $get_ix = Requests::get("$peeringdb_url/netixlan?ix_id=$ixid", array(), array('proxy' => get_proxy()));
                     $ix_json = $get_ix->body;
                     $ix_data = json_decode($ix_json);
@@ -2392,11 +2402,19 @@ function cache_peeringdb()
                             $peer_keep[] = dbInsert($peer_insert, 'pdb_ix_peers');
                         }
                     }
-                    $pdb_ix_peers_ids = implode(',', $peer_keep);
-                    dbDelete('pdb_ix_peers', "`pdb_ix_peers_id` NOT IN ($pdb_ix_peers_ids)");
                 }
-                $pdb_ix_ids = implode(',', $keep);
-                dbDelete('pdb_ix', "`pdb_ix_id` NOT IN ($pdb_ix_ids)");
+            }
+
+            // cleanup
+            if (empty($peer_keep)) {
+                dbDelete('pdb_ix_peers');
+            } else {
+                dbDelete('pdb_ix_peers', "`pdb_ix_peers_id` NOT IN " . dbGenPlaceholders(count($peer_keep)), $peer_keep);
+            }
+            if (empty($ix_keep)) {
+                dbDelete('pdb_ix');
+            } else {
+                dbDelete('pdb_ix', "`pdb_ix_id` NOT IN " . dbGenPlaceholders(count($ix_keep)), $ix_keep);
             }
         } else {
             echo "Cached PeeringDB data found....." . PHP_EOL;
@@ -2490,7 +2508,14 @@ function get_schema_list()
  */
 function get_db_schema()
 {
-    return (int)@dbFetchCell('SELECT version FROM `dbSchema` ORDER BY version DESC LIMIT 1');
+    try {
+        return \LibreNMS\DB\Eloquent::DB()
+            ->table('dbSchema')
+            ->orderBy('version', 'DESC')
+            ->value('version');
+    } catch (PDOException $e) {
+        return 0;
+    }
 }
 
 /**
@@ -2603,3 +2628,26 @@ function is_disk_valid($disk, $device)
     }
     return true;
 }
+
+
+/**
+ * Queues a hostname to be refreshed by Oxidized
+ * Settings: oxidized.url
+ *
+ * @param string $hostname
+ * @param string $msg
+ * @param string $username
+ * @return bool
+ */
+function oxidized_node_update($hostname, $msg, $username = 'not_provided')
+{
+    // Work around https://github.com/rack/rack/issues/337
+    $msg = str_replace("%", "", $msg);
+    $postdata = ["user" => $username, "msg" => $msg];
+    $oxidized_url = Config::get('oxidized.url');
+    if (!empty($oxidized_url)) {
+        Requests::put("$oxidized_url/node/next/$hostname", [], json_encode($postdata), ['proxy' => get_proxy()]);
+        return true;
+    }
+    return false;
+}//end oxidized_node_update()

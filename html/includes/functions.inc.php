@@ -576,6 +576,58 @@ function generate_lazy_graph_tag($args)
     }
 }//end generate_lazy_graph_tag()
 
+function generate_dynamic_graph_tag($args)
+{
+    $urlargs = array();
+    $width = 0;
+    foreach ($args as $key => $arg) {
+        switch (strtolower($key)) {
+            case 'width':
+                $width = $arg;
+                $value = "{{width}}";
+                break;
+            case 'from':
+                $value = "{{start}}";
+                break;
+            case 'to':
+                $value = "{{end}}";
+                break;
+            default:
+                $value = $arg;
+                break;
+        }
+        $urlargs[] = $key . "=" . $value;
+    }
+
+    return '<img style="width:'.$width.'px;height:100%" class="graph img-responsive" data-src-template="graph.php?' . implode('&amp;', $urlargs) . '" border="0" />';
+}//end generate_dynamic_graph_tag()
+
+function generate_dynamic_graph_js($args)
+{
+    $from = (is_numeric($args['from']) ? $args['from'] : '(new Date()).getTime() / 1000 - 24*3600');
+    $range = (is_numeric($args['to']) ? $args['to'] - $args['from'] : '24*3600');
+
+    $output = '<script src="js/RrdGraphJS/q-5.0.2.min.js"></script>
+        <script src="js/RrdGraphJS/moment-timezone-with-data.js"></script>
+        <script src="js/RrdGraphJS/rrdGraphPng.js"></script>
+          <script type="text/javascript">
+              q.ready(function(){
+                  var graphs = [];
+                  q(\'.graph\').forEach(function(item){
+                      graphs.push(
+                          q(item).rrdGraphPng({
+                              canvasPadding: 120,
+                                initialStart: ' . $from . ',
+                                initialRange: ' . $range . '
+                          })
+                      );
+                  });
+              });
+              // needed for dynamic height
+              window.onload = function(){ window.dispatchEvent(new Event(\'resize\')); }
+          </script>';
+    return $output;
+}//end generate_dynamic_graph_js()
 
 function generate_graph_js_state($args)
 {
@@ -1072,9 +1124,8 @@ function clean_bootgrid($string)
 
 function get_config_by_group($group)
 {
-    $group = array($group);
     $items = array();
-    foreach (dbFetchRows("SELECT * FROM `config` WHERE `config_group` = '?'", array($group)) as $config_item) {
+    foreach (dbFetchRows("SELECT * FROM `config` WHERE `config_group` = ?", array($group)) as $config_item) {
         $val = $config_item['config_value'];
         if (filter_var($val, FILTER_VALIDATE_INT)) {
             $val = (int)$val;
@@ -1097,9 +1148,8 @@ function get_config_by_group($group)
 
 function get_config_like_name($name)
 {
-    $name = array($name);
     $items = array();
-    foreach (dbFetchRows("SELECT * FROM `config` WHERE `config_name` LIKE '%?%'", array($name)) as $config_item) {
+    foreach (dbFetchRows("SELECT * FROM `config` WHERE `config_name` LIKE ?", array("%$name%")) as $config_item) {
         $items[$config_item['config_id']] = $config_item;
     }
 
@@ -1479,6 +1529,15 @@ function get_oxidized_nodes_list()
         </td>
         <td>
         " . $object['group'] . "
+        </td>
+        <td>
+          <button class='btn btn-default btn-sm' name='btn-refresh-node-devId" . $device['device_id'] . "' id='btn-refresh-nod
+e-devId" . $device['device_id'] . "' onclick='refresh_oxidized_node(\"" . $device['hostname'] . "\")'>
+            <i class='fa fa-refresh'></i>
+          </button>
+          <a href='/device/device=".$device['device_id']."/tab=showconfig/'>
+            <i class='fa fa-align-justify fa-lg icon-theme'></i>
+          </a>
         </td>
         </tr>";
     }

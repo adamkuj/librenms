@@ -24,13 +24,10 @@ if (file_exists('../config.php') && $stage != 6) {
 
 // do not use the DB in init, we'll bring it up ourselves
 $init_modules = array('web', 'nodb');
-if ($stage > 3) {
-    $init_modules[] = 'auth';
-}
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
 // List of php modules we expect to see
-$modules = array('gd','mysqli');
+$modules = array('gd','mysqlnd');
 
 $dbhost = @$_POST['dbhost'] ?: 'localhost';
 $dbuser = @$_POST['dbuser'] ?: 'librenms';
@@ -55,6 +52,10 @@ if ($stage > 1) {
     try {
         if ($stage != 6) {
             dbConnect($dbhost, $dbuser, $dbpass, $dbname, $dbport, $dbsocket);
+            if (dbIsConnected() === false) {
+                $msg = "We could not connect to your database, please check the details and try again";
+                $stage = 1;
+            }
         }
         if ($stage == 2 && $_SESSION['build-ok'] == true) {
             $stage = 3;

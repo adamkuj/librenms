@@ -254,9 +254,18 @@ LibreNMS can send alerts to osTicket API which are then converted to osTicket ti
 | API Token | 123456789 |
 
 ## PagerDuty
-PagerDuty setup is currently done by a two way integration. Start this process from Settings -> Alerting Settings from within LibreNMS.
+LibreNMS can make use of PagerDuty, this is done by utilizing an API key and Integraton Key.
 
-[PagerDuty Docs](https://www.pagerduty.com/docs/guides/librenms-integration-guide/)
+API Keys can be found under 'API Access' in the PagerDuty portal.
+
+Integration Keys can be found under 'Integration' for the particular Service you have created in the PagerDuty portal.
+
+**Example:**
+
+| Config | Example |
+| ------ | ------- |
+| API Key | randomsample |
+| Integration Key | somerandomstring |
 
 ## Philips Hue
 Want to spice up your noc life? LibreNMS will flash all lights connected to your philips hue bridge whenever an alert is triggered. 
@@ -440,3 +449,44 @@ sending the alerts such as librenms. I.e:
 | Config | Example |
 | ------ | ------- |
 | Post URL | https://alert.victorops.com/integrations/generic/20132414/alert/2f974ce1-08fc-4dg8-a4f4-9aee6cf35c98/librenms |
+
+## Kayako Classic
+
+LibreNMS can send alerts to Kayako Classic API which are then converted to tickets. 
+To use this module, you need REST API feature enabled in Kayako Classic and configured email account at LibreNMS. To enable this, do this:
+
+AdminCP -> REST API -> Settings -> Enable API (Yes)
+
+Also you need to know the department id to provide tickets to appropriate department and a user email to provide, which is used as ticket author. 
+To get department id: navigate to appropriate department name at the departments list page in Admin CP and watch the number at the end of url. 
+Example: http://servicedesk.example.com/admin/Base/Department/Edit/17. Department ID is 17
+
+As a requirement, you have to know API Url, API Key and API Secret to connect to servicedesk
+
+[Kayako REST API Docs] (https://classic.kayako.com/article/1502-kayako-rest-api)
+
+**Example:**
+
+| Config | Example |
+| ------ | ------- |
+| Kayako URL | http://servicedesk.example.com/api/ |
+| Kayako API Key | 8cc02f38-7465-4a0c-8730-bb3af122167b |
+| Kayako API Secret | Y2NhZDIxNDMtNjVkMi0wYzE0LWExYTUtZGUwMjJiZDI0ZWEzMmRhOGNiYWMtNTU2YS0yODk0LTA1MTEtN2VhN2YzYzgzZjk5 |
+| Kayako Department | 1 |
+
+## SMSFeedback
+
+SMSFeedback is a SAAS service, which can be used to deliver Alerts via API, using API url, Username & Password.
+
+They can be in international dialling format only.
+
+[SMSFeedback Api Docs](https://www.smsfeedback.ru/smsapi/)
+
+**Example:**
+
+| Config | Example |
+| ------ | ------- |
+| User | smsfeedback_user |
+| Password | smsfeedback_password |
+| Mobiles | 71234567890 |
+| Sender name| CIA |
