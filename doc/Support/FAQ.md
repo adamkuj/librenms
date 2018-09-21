@@ -32,6 +32,8 @@ source: Support/FAQ.md
  - [Why would alert un-mute itself](#faq32)
  - [How do I change the Device Type?](#faq33)
  - [Where do I update my database credentials?](#faq-where-do-i-update-my-database-credentials)
+ - [My reverse proxy is not working](#my-reverse-proxy-is-not-working)
+ - [My alerts aren't being delivered on time](#my-alerts-aren't-being-delivered-on-time)
 
 ### Developing
  - [How do I add support for a new OS?](#faq8)
@@ -370,7 +372,7 @@ $config['db_pass'] = '';
 $config['db_name'] = '';
 ```
 
-.env:
+[.env](../Support/Environment-Variables.md#database):
 ```bash
 DB_HOST=
 DB_DATABASE=
@@ -378,3 +380,13 @@ DB_USERNAME=
 DB_PASSWORD=
 DB_PORT=
 ```
+
+### <a name='my-reverse-proxy-is-not-working'>My reverse proxy is not working</a>
+
+Make sure your proxy is passing the proper variables.
+At a minimum: X-Forwarded-For and X-Forwarded-Proto (X-Forwarded-Port if needed)
+
+You also need to [Set the proxy or proxies as trusted](../Support/Environment-Variables.md#trusted-reverse-proxies)
+
+### <a name='my-alerts-aren't-being-delivered-on-time'>My alerts aren't being delivered on time</a>
+If you're running MySQL/MariaDB on a separate machine or container make sure the timezone is set properly on both the LibreNMS **and**  MySQL/MariaDB instance. Alerts will be delivered according to MySQL/MariaDB's time, so a mismatch between the two can cause alerts to be delivered late if LibreNMS is on a timezone later than MySQL/MariaDB.

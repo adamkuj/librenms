@@ -179,7 +179,7 @@ Anything starting with a # is comment. The format for variables are $variable=$v
 Content of an example /etc/snmp/bind.config . Please edit with your own settings.
 ```
 rndc = The path to rndc. Default: /usr/bin/env rndc
-call_rndc = A 0/1 boolean on weather to call rndc stats. Suggest to set to 0 if using netdata. Default: 1
+call_rndc = A 0/1 boolean on whether or not to call rndc stats. Suggest to set to 0 if using netdata. Default: 1
 stats_file = The path to the named stats file. Default: /var/run/named/stats
 agent = A 0/1 boolean for if this is being used as a LibreNMS agent or not. Default: 0
 zero_stats = A 0/1 boolean for if the stats file should be zeroed first. Default: 0 (1 if guessed)
@@ -284,8 +284,10 @@ The application should be auto-discovered as described at the top of the page. I
 SNMP extend script to get your exim stats data into your host.
 
 ##### SNMP Extend
-1. Copy the [exim stats](https://github.com/librenms/librenms-agent/blob/master/snmp/exim-stats.sh) to `/etc/snmp/` (or any other suitable location) on your host.
-
+1. Download the script onto the desired host.
+```
+wget https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/exim-stats.sh -O /etc/snmp/exim-stats.sh
+```
 2. Run `chmod +x /etc/snmp/exim-stats.sh`
 
 3. Edit your snmpd.conf file (usually `/etc/snmp/snmpd.conf`) and add:
@@ -742,7 +744,8 @@ The application should be auto-discovered as described at the top of the page. I
 ```
 extend phpfpmsp /etc/snmp/phpfpm-sp
 ```
-5: Edit /etc/snmp/phpfpm-sp to include the status URL for the PHP-FPM pool you are monitoring.
+5. Edit /etc/snmp/phpfpm-sp to include the status URL for the PHP-FPM pool you are monitoring.
+
 6. Restart snmpd on your host
 
 It is worth noting that this only monitors a single pool. If you want to monitor multiple pools, this won't do it.

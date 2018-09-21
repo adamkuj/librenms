@@ -43,7 +43,7 @@ Placeholders are special variables that if used within the template will be repl
 - long uptime of the Device (28 days, 22h 30m 7s): `$alert->uptime_long`
 - description (purpose db field) of the Device: `$alert->description`
 - notes of the Device: `$alert->notes`
-- notes of the alert: `$alert->alert_notes`
+- notes of the alert (ack notes): `$alert->alert_notes`
 - ping timestamp (if icmp enabled): `$alert->ping_timestamp`
 - ping loss (if icmp enabled): `$alert->ping_loss`
 - ping min (if icmp enabled): `$alert->ping_min`
@@ -116,7 +116,7 @@ Unique-ID: {{ $alert->uid }}
 Rule: @if ($alert->name) {{ $alert->name }} @else {{ $alert->rule }} @endif
 @if ($alert->faults) Faults:
 @foreach ($alert->faults as $key => $value)
-  #{{ $key }}: {{ $value['string'] }}
+  {{ $key }}: {{ $value['string'] }}
 @endforeach
 @endif
 Alert sent to:
@@ -133,11 +133,11 @@ Severity: {{ $alert->severity }}
 Timestamp: {{ $alert->timestamp }}
 Rule: @if ($alert->name) {{ $alert->name }} @else {{ $alert->rule }} @endif
 @foreach ($alert->faults as $key => $value)
-Physical Interface: $value['ifDescr']
-Interface Description: $value['ifAlias']
-Interface Speed: @php echo ($value['ifSpeed']/1000000000); @endphp Gbs
-Inbound Utilization: @php echo (($value['ifInOctets_rate']*8)/$value['ifSpeed'])*100; @endphp%
-Outbound Utilization: @php echo (($value['ifOutOctets_rate']*8)/$value['ifSpeed'])*100; @endphp%
+Physical Interface: {{ $value['ifDescr'] }}
+Interface Description: {{ $value['ifAlias'] }}
+Interface Speed: {{ ($value['ifSpeed']/1000000000) }} Gbs
+Inbound Utilization: {{ (($value['ifInOctets_rate']*8)/$value['ifSpeed'])*100 }}
+Outbound Utilization: {{ (($value['ifOutOctets_rate']*8)/$value['ifSpeed'])*100 }}
 @endforeach
 ```
 
@@ -281,7 +281,7 @@ Alert-ID: {{ $alert->id }} <br>
 Rule: @if ($alert->name) {{ $alert->name }} @else {{ $alert->rule }} @endif <br>
 @if ($alert->faults) Faults:
 @foreach ($alert->faults as $key => $value)
-#{{ $key }}: {{ $value['string'] }}<br>
+{{ $key }}: {{ $value['string'] }}<br>
 @endforeach 
 @if ($alert->faults) <b>Faults:</b><br>
 @foreach ($alert->faults as $key => $value)<img src="https://server/graph.php?device={{ $value['device_id'] }}&type=device_processor&width=459&height=213&lazy_w=552&from=end-72h><br>

@@ -12,7 +12,7 @@
  * the source code distribution for details.
  */
 
-use LibreNMS\Authentication\Auth;
+use LibreNMS\Authentication\LegacyAuth;
 
 $no_refresh = true;
 
@@ -270,7 +270,7 @@ if (isset($_GET['account']) && isset($_GET['service_key']) && isset($_GET['servi
     set_config_name('alert.pagerduty.service', $_GET['service_name']);
 }
 
-if (isset($vars['del_pagerduty']) && $vars['del_pagerduty'] == true && Auth::user()->hasGlobalAdmin()) {
+if (isset($vars['del_pagerduty']) && $vars['del_pagerduty'] == true && LegacyAuth::user()->hasGlobalAdmin()) {
     set_config_name('alert.transports.pagerduty', '');
     set_config_name('alert.pagerduty.account', '');
     set_config_name('alert.pagerduty.service', '');
@@ -329,6 +329,11 @@ $general_conf = array(
           'descr'              => 'Updates to contact email addresses not honored',
           'type'               => 'checkbox',
     ),
+    [
+        'name'                 => 'alert.ack_until_clear',
+        'descr'                => 'Default acknowledge until alert clears option',
+        'type'                 => 'checkbox',
+    ]
 );
 
 $mail_conf = array(
