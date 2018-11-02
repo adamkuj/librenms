@@ -226,7 +226,9 @@ class LegacyUserProvider implements UserProvider
         $user->fill($new_user); // fill all attributes
         $user->auth_type = $type; // doing this here in case it was null (legacy)
         $user->auth_id = $auth_id;
-        $user->save();
+
+	// ALK 20181102 commenting out since this breaks http-auth guest access per https://community.librenms.org/t/duplicate-entry-http-auth-admin-for-key-username/5611
+        //$user->save();
 
         return $user;
     }
