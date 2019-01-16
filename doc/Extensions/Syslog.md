@@ -275,13 +275,32 @@ $config['os']['iosxr']['syslog_hook'][] = Array('regex' => '/%GBL-CONFIG-6-DB_CO
 
 #### Juniper Junos
 ```ssh
-$config['os']['junos']['syslog_hook'][] = Array('regex' => '/%UI_COMMIT:/', 'script' => '/opt/librenms/scripts/syslog-notify-oxidized.php');
+$config['os']['junos']['syslog_hook'][] = Array('regex' => '/UI_COMMIT:/', 'script' => '/opt/librenms/scripts/syslog-notify-oxidized.php');
+```
+#### Juniper ScreenOS
+```ssh
+$config['os']['screenos']['syslog_hook'][] = Array('regex' => '/System configuration saved/', 'script' => '/opt/librenms/scripts/syslog-notify-oxidized.php');
 ```
 
 #### Allied Telesis Alliedware Plus
-**Note:** At least software version 5.4.8-2.1 is required. ```log host x.x.x.x level notices program imi``` may also be required depending on configuration. This is to ensure the syslog hook log message gets sent to the syslog server. 
+**Note:** At least software version 5.4.8-2.1 is required. `log host x.x.x.x level notices program imi` may also be required depending on configuration. This is to ensure the syslog hook log message gets sent to the syslog server. 
 
 ```ssh
 $config['os']['awplus']['syslog_hook'][] = Array('regex' => '/IMI.+.Startup-config saved on/', 'script' => '/opt/librenms/scripts/syslog-notify-oxidized.php');
 ```
 
+### Configuration Options
+
+#### Matching syslogs to hosts with different names
+
+In some cases, you may get logs that aren't being associated with the device in LibreNMS. For example, in LibreNMS the device is known as "ne-core-01", and that's how DNS resolves. However, the received syslogs are for "loopback.core-nw". 
+
+To fix this issue, you can configure LibreNMS to translate the incoming syslog hostname into another hostname, so that the logs get associated with the correct device.
+
+Example:
+```ssh
+$config['syslog_xlate'] = array(
+        'loopback0.core7k1.noc.net' => 'n7k1-core7k1',
+        'loopback0.core7k2.noc.net' => 'n7k2-core7k2'
+);
+```

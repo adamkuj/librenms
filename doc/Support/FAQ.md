@@ -8,6 +8,7 @@ path: blob/master/doc/
  - [Do you have a demo available?](#faq5)
 
 ### Support
+ - [How does LibreNMS use MIBs?](#how-does-librenms-use-mibs)
  - [Why do I get blank pages sometimes in the WebUI?](#faq6)
  - [Why do I not see any graphs?](#faq10)
  - [How do I debug pages not loading correctly?](#faq7)
@@ -79,6 +80,9 @@ However we will always aim to help wherever possible so if you are running a dis
 #### <a name="faq5"> Do you have a demo available?</a>
 
 We do indeed, you can find access to the demo [here](https://demo.librenms.org)
+
+### <a name='how-does-librenms-use-mibs'>How does LibreNMS use MIBs?</a>
+LibreNMS does not parse MIBs to discover sensors for devices.  LibreNMS uses static discovery definitions written in YAML or PHP.  Therefore, updating a MIB alone will not improve OS support, the definitions must be updated.  LibreNMS only uses MIBs to make OIDs easier to read.
 
 #### <a name="faq6"> Why do I get blank pages sometimes in the WebUI?</a>
 
@@ -348,10 +352,10 @@ Configs can often contain sensitive data. Because of that only global admins can
 Demo users allow full access except adding/editing users and deleting devices and can't change passwords.
 
 ### <a name="faq31"> Why does modifying 'Default Alert Template' fail?</a>
-This template's entry could be missing in the database. Please run:
+This template's entry could be missing in the database. Please run this from the LibreNMS directory:
 
 ```bash
-mysql -u librenms -p < sql-schema/202.sql
+php artisan db:seed --class=DefaultAlertTemplateSeeder
 ```
 ### <a name="faq32"> Why would alert un-mute itself?</a> 
 If alert un-mutes itself then it most likely means that the alert cleared and is then triggered again.

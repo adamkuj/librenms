@@ -46,7 +46,7 @@ abstract class PaginatedAjaxController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder
      */
-    abstract public function baseQuery($request);
+    abstract protected function baseQuery($request);
 
     /**
      * @param Paginator $paginator
@@ -59,18 +59,31 @@ abstract class PaginatedAjaxController extends Controller
      *
      * @return array
      */
-    public function rules()
+    protected function rules()
     {
         return [];
     }
 
     /**
-     * Defines search fields will be searched in order
+     * Defines search fields. They will be searched in order.
      *
      * @param \Illuminate\Http\Request $request
      * @return array
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function searchFields($request)
+    protected function searchFields($request)
+    {
+        return [];
+    }
+
+    /**
+     * Defines filter fields.  Request and table fields must match.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return array
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    protected function filterFields($request)
     {
         return [];
     }
@@ -81,13 +94,13 @@ abstract class PaginatedAjaxController extends Controller
      * @param Model $model
      * @return array|Collection|Model
      */
-    public function formatItem($model)
+    protected function formatItem($model)
     {
         return $model;
     }
 
     /**
-     * @param string
+     * @param string $search
      * @param Builder $query
      * @param array $fields
      * @return Builder
@@ -106,6 +119,23 @@ abstract class PaginatedAjaxController extends Controller
         return $query;
     }
 
+    /**
+     * @param Request $request
+     * @param Builder $query
+     * @param array $fields
+     */
+    protected function filter($request, $query, $fields)
+    {
+        foreach ($fields as $target => $field) {
+            if ($value = $request->get($field)) {
+                if (is_string($target)) {
+                    $query->where($target, $value);
+                } else {
+                    $query->where($field, $value);
+                }
+            }
+        }
+    }
 
     /**
      * Validate the given request with the given rules.

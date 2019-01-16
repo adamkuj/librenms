@@ -48,7 +48,7 @@ The unix-agent does not have a discovery module, only a poller module. That poll
 1. [FreeBSD NFS Server](#freebsd-nfs-server) - SNMP extend
 1. [FreeRADIUS](#freeradius) - SNMP extend, Agent
 1. [Freeswitch](#freeswitch) - SNMP extend, Agent
-1. [GPSD](#gpsd) - Agent
+1. [GPSD](#gpsd) - SNMP extend, Agent
 1. [Mailscanner](#mailscanner) - SNMP extend
 1. [Memcached](#memcached) - SNMP extend
 1. [Munin](#munin) - Agent
@@ -62,6 +62,7 @@ The unix-agent does not have a discovery module, only a poller module. That poll
 1. [OS Updates](#os-updates) - SNMP extend
 1. [PHP-FPM](#php-fpm) - SNMP extend
 1. [Pi-hole](#pi-hole) - SNMP extend
+1. [Portactivity](#portactivity) - SNMP extend
 1. [Postfix](#postfix) - SNMP extend
 1. [Postgres](#postgres) - SNMP extend
 1. [PowerDNS](#powerdns) - Agent
@@ -463,7 +464,21 @@ extend freeswitch /etc/snmp/freeswitch
 The application should be auto-discovered as described at the top of the page. If it is not, please follow the steps set out under `SNMP Extend` heading top of page.
 
 ### GPSD
-A small shell script that reports GPSD status.
+
+##### SNMP Extend
+1. Download the script onto the desired host.
+```
+wget https://raw.githubusercontent.com/librenms/librenms-agent/master/snmp/gpsd -O /etc/snmp/gpsd
+```
+2. Run `chmod +x /etc/snmp/gpsd`
+
+3. Edit your snmpd.conf file (usually `/etc/snmp/snmpd.conf`) and add:
+```
+extend gpsd /etc/snmp/gpsd
+```
+4. Restart snmpd on your host
+
+The application should be auto-discovered as described at the top of the page. If it is not, please follow the steps set out under `SNMP Extend` heading at the top of the page.
 
 ##### Agent
 [Install the agent](Agent-Setup.md) on this device if it isn't already and copy the `gpsd` script to `/usr/lib/check_mk_agent/local/`
@@ -598,6 +613,7 @@ location /nginx-status {
     stub_status on;
     access_log   off;
     allow 127.0.0.1;
+    allow ::1;
     deny all;
 }
 ```
@@ -771,6 +787,32 @@ extend pi-hole /etc/snmp/pi-hole
 
 The application should be auto-discovered as described at the top of the page. If it is not, please follow the steps set out under `SNMP Extend` heading top of page.
 
+### Portactivity
+#### SNMP Extend
+
+1. Install the Perl module Parse::Netstat.
+
+2. Copy the Perl script to the desired host (the host must be added to LibreNMS devices)
+```
+wget https://github.com/librenms/librenms-agent/raw/master/snmp/portactivity -O /etc/snmp/portactivity
+```
+
+3. Make the script executable. (chmod +x /etc/snmp/portactivity)
+
+4. Edit your snmpd.conf file (usually /etc/snmp/snmpd.conf) and add:
+```
+extend portactivity /etc/snmp/portactivity -p http,ldap,imap
+```
+
+Will monitor HTTP, LDAP, and IMAP. The -p switch specifies what ports to use. This is a comma seperated list.
+
+These must be found in '/etc/services' or where ever NSS is set to fetch it from. If not, it will throw an error.
+
+If you want to JSON returned by it to be printed in a pretty format use the -P flag.
+
+5. Restart snmpd on your host.
+
+Please note that for only TCP[46] services are supported.
 
 ### Postfix
 #### SNMP Extend
@@ -1088,13 +1130,20 @@ The application should be auto-discovered as described at the top of the page. I
 A small shell script that exports apcacess ups status.
 
 ##### SNMP Extend
-1. Copy the [ups apcups](https://github.com/librenms/librenms-agent/blob/master/snmp/ups-apcups.sh) to `/etc/snmp/` on your host.
+1. Copy the [ups apcups](https://github.com/librenms/librenms-agent/blob/master/snmp/ups-apcups to `/etc/snmp/` on your host.
 
-2. Run `chmod +x /etc/snmp/ups-apcups.sh`
+2. Run `chmod +x /etc/snmp/ups-apcups`
 
 3. Edit your snmpd.conf file (usually /etc/snmp/snmpd.conf) and add:
 ```
-extend ups-apcups /etc/snmp/ups-apcups.sh
+extend ups-apcups /etc/snmp/ups-apcups
+```
+
+If 'apcaccess' is not in the PATH enviromental variable snmpd is
+using, you may need to do something like below.
+
+```
+extend ups-apcups/usr/bin/env PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin /etc/snmp/ups-apcups
 ```
 
 4. Restart snmpd on your host

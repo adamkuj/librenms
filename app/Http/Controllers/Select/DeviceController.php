@@ -29,21 +29,34 @@ use App\Models\Device;
 
 class DeviceController extends SelectController
 {
-    public function searchFields($request)
+    private $id = 'device_id';
+
+    protected function rules()
+    {
+        return [
+            'id' => 'nullable|in:device_id,hostname'
+        ];
+    }
+
+    protected function searchFields($request)
     {
         return ['hostname', 'sysName'];
     }
 
-    public function baseQuery($request)
+    protected function baseQuery($request)
     {
-        return Device::hasAccess($request->user())->select('device_id', 'hostname', 'sysName');
+        $this->id = $request->get('id', 'device_id');
+
+        return Device::hasAccess($request->user())
+            ->select('device_id', 'hostname', 'sysName')
+            ->orderBy('hostname');
     }
 
     public function formatItem($device)
     {
         /** @var Device $device */
         return [
-            'id' => $device->device_id,
+            'id' => $device->{$this->id},
             'text' => $device->displayName(),
         ];
     }

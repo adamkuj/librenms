@@ -12,9 +12,10 @@ modules:
               -
                   oid: cucsEquipmentChassisOperState
                   value: cucsEquipmentChassisOperState
-                  num_oid: .1.3.6.1.4.1.9.9.719.1.15.7.1.27.
+                  num_oid: '.1.3.6.1.4.1.9.9.719.1.15.7.1.27.{{ $index }}'
                   descr: 'Chassis - {{ $cucsEquipmentChassisDn }}'
                   index: '{{ $index }}'
+                  group: Chassis
                   states:
                       - { value: 0, descr: unknown, graph: 1, generic: 3 }
                       - { value: 1, descr: operable, graph: 1, generic: 0 }
@@ -49,9 +50,10 @@ modules:
               -
                   oid: cucsEquipmentFanModuleOperState
                   value: cucsEquipmentFanModuleOperState
-                  num_oid: .1.3.6.1.4.1.9.9.719.1.15.13.1.7.
+                  num_oid: '.1.3.6.1.4.1.9.9.719.1.15.13.1.7.{{ $index }}'
                   descr: 'Fan Module - {{ $cucsEquipmentFanModuleDn }}'
                   index: '{{ $index }}'
+                  group: Fans
                   states:
                       - { value: 0, descr: unknown, graph: 1, generic: 3 }
                       - { value: 1, descr: ok, graph: 1, generic: 0 }
@@ -66,9 +68,10 @@ modules:
               -
                   oid: cucsEquipmentPsuPower
                   value: cucsEquipmentPsuPower
-                  num_oid: .1.3.6.1.4.1.9.9.719.1.15.56.1.10.
+                  num_oid: '.1.3.6.1.4.1.9.9.719.1.15.56.1.10.{{ $index }}'
                   descr: 'PSU - {{ $cucsEquipmentPsuDn }}'
                   index: '{{ $index }}'
+                  group: PSU
                   states:
                       - { value: 0, descr: unknown, graph: 1, generic: 3 }
                       - { value: 1, descr: on, graph: 1, generic: 0 }

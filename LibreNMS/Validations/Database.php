@@ -46,19 +46,22 @@ class Database extends BaseValidation
 
         // check database schema version
         $current = get_db_schema();
+        $latest = 1000;
 
-        $schemas = get_schema_list();
-        end($schemas);
-        $latest = key($schemas);
-
-        if ($current < $latest) {
+        if ($current === 0 || $current === $latest) {
+            \Artisan::call('migrate', ['--pretend' => true, '--force' => true]);
+            if (\Artisan::output() !== "Nothing to migrate.\n") {
+                $validator->fail("Your database is out of date!", './librenms migrate');
+                return;
+            }
+        } elseif ($current < $latest) {
             $validator->fail(
                 "Your database schema ($current) is older than the latest ($latest).",
                 "Manually run ./daily.sh, and check for any errors."
             );
             return;
         } elseif ($current > $latest) {
-            $validator->warn("Your schema ($current) is newer than than expected ($latest).  If you just switch to the stable release from the daily release, your database is in between releases and this will be resolved with the next release.");
+            $validator->warn("Your database schema ($current) is newer than expected ($latest). If you just switched to the stable release from the daily release, your database is in between releases and this will be resolved with the next release.");
         }
 
         $this->checkCollation($validator);

@@ -26,6 +26,7 @@
 namespace LibreNMS\Validations;
 
 use LibreNMS\Config;
+use LibreNMS\Util\Git;
 use LibreNMS\ValidationResult;
 use LibreNMS\Validator;
 
@@ -59,6 +60,10 @@ class User extends BaseValidation
             }
         }
 
+        # if no git, then we probably have different permissions by design
+        if (!Git::repoPresent()) {
+            return;
+        }
 
         // Let's test the user configured if we have it
         if (Config::has('user')) {
